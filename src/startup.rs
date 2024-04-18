@@ -1,4 +1,5 @@
 use actix_web::dev::Server;
+use actix_web::middleware::Logger;
 use actix_web::{web, App, HttpRequest, HttpServer, Responder};
 use crate::routes::*;
 use sqlx::PgPool;
@@ -16,6 +17,7 @@ pub async fn run(listener: TcpListener,
     let connection_pool = web::Data::new(connection_pool);
     let server = HttpServer::new(move || {
         App::new()
+            .wrap(Logger::default())
             .route("/", web::get().to(greet))
             .route("/health_check", web::get().to(health_check))
             .route("/subscriptions", web::post().to(subscribe))
