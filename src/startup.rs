@@ -1,9 +1,9 @@
 use actix_web::dev::Server;
-use actix_web::middleware::Logger;
 use actix_web::{web, App, HttpRequest, HttpServer, Responder};
 use crate::routes::*;
 use sqlx::PgPool;
 
+use tracing_actix_web::TracingLogger;
 use std::net::TcpListener;
 
 async fn greet(req: HttpRequest) -> impl Responder {
@@ -17,7 +17,7 @@ pub async fn run(listener: TcpListener,
     let connection_pool = web::Data::new(connection_pool);
     let server = HttpServer::new(move || {
         App::new()
-            .wrap(Logger::default())
+            .wrap(TracingLogger::default())
             .route("/", web::get().to(greet))
             .route("/health_check", web::get().to(health_check))
             .route("/subscriptions", web::post().to(subscribe))
