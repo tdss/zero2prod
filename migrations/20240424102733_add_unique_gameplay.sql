@@ -1,0 +1,3 @@
+ALTER TABLE game
+  ADD COLUMN IF NOT EXISTS url_title varchar(32) NOT NULL UNIQUE
+
