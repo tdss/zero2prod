@@ -1,6 +1,7 @@
+use actix_web::HttpResponse;
 use serde::{Serialize,Deserialize};
 use actix_web::Responder;
-use uuid::Uuid;
+use sqlx::PgPool;
 use actix_web::web;
 
 #[derive(Serialize, Deserialize)]
@@ -32,20 +33,83 @@ pub struct GameRequestData {
 
 #[derive(Serialize)]
 pub struct GameResponseData {
-    game_name: String,
-    game_description: String,
-    game_reward: String,
-    game_tnc: String,
+    title: String,
+    description: String,
+    reward: String,
+    monetary_reward: i32,
+    monetary_reward_increase: i32,
+    created_at: chrono::DateTime<chrono::Utc>,
+    launched_at: chrono::DateTime<chrono::Utc>,
     id: uuid::Uuid,
-    time_to_cooldown: i32,
-    chances_left: i32,
-    cooldown_to_win_time: i32,
+    time_reset_period: i32,
+    max_number_of_players: i32,
+}
+
+#[derive(Serialize)] 
+pub struct GameWinnerData {
+    id: uuid::Uuid,
     current_winner: PlayerResponseData,
     previous_winners: Vec<PlayerResponseData>
 }
 
-pub async fn read_game_data(req: web::Query<GameRequestData>) -> actix_web::Result<impl Responder> {
-    let obj = GameResponseData {
+//pub async fn get_game(req: web::Query<GameRequestData>) -> actix_web::Result<impl Responder> {
+//    match 
+//}
+#[tracing::instrument(
+    name="Getting game from database"
+    skip(connection, req)
+)]
+pub async fn read_game_data(req: web::Query<GameRequestData>, connection: web::Data<PgPool>) -> actix_web::Result<impl Responder> {
+    let mut transaction = connection.begin().await.unwrap();
+    get_game(&connection).await;
+    let x: &PgPool = &connection;
+    let data = sqlx::query!(
+    r#"
+    INSERT INTO subscriptions (id, email, name, subscribed_at)
+    VALUES ($1, $2, $3, $4)
+    "#,
+        uuid::Uuid::new_v4(),
+        "x".to_string(),
+        "y".to_string(),
+        chrono::Utc::now()
+    ).execute(connection.get_ref()).await;//.expect("No game in database");
+
+
+    match data {
+            Ok(_) => Ok(web::Json({})),
+            Err(_) => Ok(web::Json({})),
+        }
+ 
+}
+
+pub async fn get_game(pool: &PgPool) -> actix_web::Result<impl Responder> {
+    let data = sqlx::query!(
+    r#"
+    INSERT INTO subscriptions (id, email, name, subscribed_at)
+    VALUES ($1, $2, $3, $4)
+    "#,
+        uuid::Uuid::new_v4(),
+        "x".to_string(),
+        "y".to_string(),
+        chrono::Utc::now()
+    ).execute(pool).await;//.expect("No game in database");
+
+
+    match data {
+            Ok(_) => Ok(web::Json({})),
+            Err(_) => Ok(web::Json({})),
+        }
+   
+}
+
+    /*.map_err(|e| {
+        tracing::error!("Failed to execute query: {:?}", e);
+        ErrorNotFound(e)
+    });
+    */
+
+
+    /*let obj = GameResponseData {
         game_name: req.game_name.to_string(),
         id: uuid::Uuid::new_v4(),
         game_description: "This is cool game".to_string(),
@@ -62,7 +126,7 @@ pub async fn read_game_data(req: web::Query<GameRequestData>) -> actix_web::Resu
             PlayerResponseData{username: "First Loser".to_string(), id: Uuid::new_v4()}, 
         ]
     };
-    Ok(web::Json(obj))
-}
+    Ok(web::Json(obj))*/
+//}
 
 
